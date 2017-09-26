@@ -1,0 +1,20 @@
+{
+    "name": "ubccr/xdmod-travis",
+    "description": "Scripts and other assets for testing Open XDMoD and Open XDMoD modules using Travis CI.",
+    "config": {
+        "platform": {
+            "php": "5.3.3"
+        },
+        "secure-http": false
+    },
+    "require-dev": {
+        "squizlabs/php_codesniffer": "^2.8.0"
+    },
+    "license": "LGPL-3.0",
+    "authors": [
+        {
+            "name": "The XDMoD Team",
+            "email": "ccr-xdmod-help@buffalo.edu"
+        }
+    ]
+}
