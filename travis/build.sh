@@ -3,6 +3,7 @@
 # Perform Travis tests.
 
 script_dir="$(cd "$(dirname $0)" || exit 2; pwd -P)"
+qa_dir="$(dirname "$script_dir")"
 
 source "$script_dir/helpers.sh"
 
@@ -13,7 +14,7 @@ new_bin_paths="$(pwd)/vendor/bin:$(pwd)/node_modules/.bin"
 if [ "$repo_type" == "module" ]; then
     new_bin_paths="$new_bin_paths:$XDMOD_SOURCE_DIR/vendor/bin"
 fi
-new_bin_paths="$new_bin_paths:$script_dir/vendor/bin:$script_dir/node_modules/.bin"
+new_bin_paths="$new_bin_paths:$qa_dir/vendor/bin:$qa_dir/node_modules/.bin"
 PATH="$new_bin_paths:$PATH"
 export PATH
 
@@ -279,7 +280,7 @@ if [ $install_exit_value != 0 ]; then
 fi
 
 # Perform post-install tests, if any.
-post_install_path="./.travis.post-install-test.sh"
+post_install_path=".travis/post-install-test.sh"
 if [ -e "$post_install_path" ]; then
     start_travis_fold post-install
     echo "Running repo-specific post-install tests..."

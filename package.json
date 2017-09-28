@@ -1,7 +1,7 @@
 {
-    "name": "xdmod-travis",
+    "name": "xdmod-qa",
     "version": "1.0.0",
-    "description": "Scripts and other assets for testing Open XDMoD and Open XDMoD modules using Travis CI.",
+    "description": "Scripts and other assets for testing Open XDMoD and Open XDMoD modules.",
     "dependencies": {},
     "devDependencies": {
         "eslint": "^3.16.1",
@@ -14,7 +14,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/ubccr/xdmod-travis.git"
+        "url": "git+https://github.com/ubccr/xdmod-qa.git"
     },
     "author": "The XDMoD Team <ccr-xdmod-help@buffalo.edu>",
     "license": "LGPL-3.0"

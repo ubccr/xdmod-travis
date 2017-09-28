@@ -1,6 +1,6 @@
 {
-    "name": "ubccr/xdmod-travis",
-    "description": "Scripts and other assets for testing Open XDMoD and Open XDMoD modules using Travis CI.",
+    "name": "ubccr/xdmod-qa",
+    "description": "Scripts and other assets for testing Open XDMoD and Open XDMoD modules.",
     "config": {
         "platform": {
             "php": "5.3.3"

@@ -3,6 +3,7 @@
 # Install required components for Travis tests.
 
 script_dir="$(cd "$(dirname $0)" || exit 2; pwd -P)"
+qa_dir="$(dirname "$script_dir")"
 
 source "$script_dir/helpers.sh"
 
@@ -88,8 +89,8 @@ function install_dependencies() {
     echo
 }
 
-# Install Travis-specific dependencies.
-install_dependencies "$script_dir"
+# Install QA dependencies.
+install_dependencies "$qa_dir"
 
 # If this repo is a module, get and set up the corresponding version of Open XDMoD.
 if [ "$repo_type" == "module" ]; then
@@ -119,4 +120,4 @@ fi
 install_dependencies "$(pwd)"
 
 # Install style files.
-"$script_dir/style/install.sh" .
+"$qa_dir/style/install.sh" .
