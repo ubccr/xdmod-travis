@@ -16,42 +16,7 @@ To make use of the linters used by Open XDMoD on your local system, perform the 
 
 ### [Travis CI](https://travis-ci.org)
 
-Create a `.travis.yml` file in the root of your module's repository. You can use the template below to get started.
-
-```yaml
-# Use container-based environment for quicker initialization
-sudo: false
-
-# Specify the build matrix
-language: php
-php:
-    - '5.4'
-    - '7.0'
-    - '7.1.6'
-env:
-    global:
-        - NODE_VERSION=6
-        - XDMOD_TEST_ARTIFACTS_MIRROR="$HOME/xdmod-test-artifacts.git"
-        - XDMOD_MODULE_DIR="mymodule"
-        - XDMOD_MODULE_NAME="My Module"
-
-# Add dependency directories to the Travis cache
-cache:
-    directories:
-        - $HOME/.npm
-        - $HOME/.composer/cache
-        - /tmp/pear/cache
-        - $XDMOD_TEST_ARTIFACTS_MIRROR
-
-# Obtain the shared QA assets before using them.
-before_install: git clone --depth=1 --branch="v1" https://github.com/ubccr/xdmod-qa.git .qa
-
-# Delegate the installation step to the shared Travis installation script
-install: .qa/travis/install.sh
-
-# Delegate the build step to the shared Travis build script
-script: .qa/travis/build.sh
-```
+Create a `.travis.yml` file in the root of your module's repository. You can copy the template at path [`travis/template.yml`](travis/template.yml) to get started.
 
 In `.travis.yml`, set the following environment variables to values applicable to your module:
 
