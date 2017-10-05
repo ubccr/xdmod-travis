@@ -126,14 +126,12 @@ print_section_results "Syntax tests" $syntax_exit_value
 start_travis_fold style
 echo "Running style tests..."
 
-npm install https://github.com/jpwhite4/lint-diff/tarball/master
-
 style_exit_value=0
 for file in "${php_files_changed[@]}"; do
     phpcs "$file" --report=json > "$file.lint.new.json"
     if [ $? != 0 ]; then
         git show "$commit_range_start:$file" | phpcs --stdin-path="$file" --report=json > "$file.lint.orig.json"
-        ./node_modules/.bin/lint-diff "$file.lint.orig.json" "$file.lint.new.json"
+        lint-diff "$file.lint.orig.json" "$file.lint.new.json"
         if [ $? != 0 ]; then
             style_exit_value=2
         fi
@@ -151,7 +149,7 @@ for file in "${js_files_changed[@]}"; do
     eslint "$file" -f json > "$file.lint.new.json"
     if [ $? != 0 ]; then
         git show "$commit_range_start:$file" | eslint --stdin --stdin-filename "$file" -f json > "$file.lint.orig.json"
-        ./node_modules/.bin/lint-diff "$file.lint.orig.json" "$file.lint.new.json"
+        lint-diff "$file.lint.orig.json" "$file.lint.new.json"
         if [ $? != 0 ]; then
             style_exit_value=2
         fi

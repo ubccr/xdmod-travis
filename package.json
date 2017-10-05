@@ -7,7 +7,8 @@
         "eslint": "^3.16.1",
         "eslint-config-airbnb-base": "^11.1.0",
         "eslint-plugin-import": "^2.2.0",
-        "jsonlint": "^1.6.2"
+        "jsonlint": "^1.6.2",
+        "lint-diff": "git+https://github.com/jpwhite4/lint-diff.git"
     },
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
