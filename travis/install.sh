@@ -118,6 +118,3 @@ fi
 
 # Install this repo's dependencies.
 install_dependencies "$(pwd)"
-
-# Install style files.
-"$qa_dir/style/install.sh" .

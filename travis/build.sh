@@ -105,7 +105,7 @@ for file in "${php_files_changed[@]}" "${php_files_added[@]}"; do
     fi
 done
 for file in "${js_files_changed[@]}" "${js_files_added[@]}"; do
-    eslint --no-eslintrc "$file"
+    eslint "$file"
     if [ $? != 0 ]; then
         syntax_exit_value=2
     fi
@@ -125,6 +125,9 @@ print_section_results "Syntax tests" $syntax_exit_value
 # Perform style tests.
 start_travis_fold style
 echo "Running style tests..."
+
+# Install style files.
+"$qa_dir/style/install.sh" .
 
 style_exit_value=0
 for file in "${php_files_changed[@]}"; do
