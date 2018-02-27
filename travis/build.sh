@@ -1,11 +1,95 @@
 #!/usr/bin/env bash
-
-# Perform Travis tests.
+#
+# Perform travis tests. Use cases:
+#
+# 1. Compare files between two commits (e.g., a current and previous commit on a pull request)
+# 2. Compare files that are staged but not yet commited to the latest commit of an upstream branch
+#    (e.g., prior to committing)
 
 script_dir="$(cd "$(dirname $0)" || exit 2; pwd -P)"
 qa_dir="$(dirname "$script_dir")"
 
 source "$script_dir/helpers.sh"
+
+# Remote branch that we want to compare against. This is used if travis has not specified a commit
+# or commit range
+remote_branch=
+
+# 1 = run only style and syntax tests
+only_style_tests=0
+
+function usage() {
+    cat <<USAGE
+Usage: $0
+    -r | --remote <remote_git_branch>
+    Set the remote git branch to compare against. Defaults to the upstream HEAD.
+
+    -s | --only-style-tests
+    Run syntax and style tests only.
+USAGE
+}
+
+while [ "$1" != "" ]; do
+    case $1 in
+        -r | --remote )
+            shift
+            remote_branch=$1
+            git rev-parse --verify --quiet $remote_branch &> /dev/null
+            if [ $? -ne 0 ]; then
+                echo "Could not resolve remote branch: $remote_branch" >&2
+                exit 1
+            fi
+            ;;
+        -s | --only-style-tests )
+            echo "Running only style tests"
+            only_style_tests=1
+            ;;
+        * )
+            usage
+            exit 1
+            ;;
+    esac
+    shift
+done
+
+# When running outside of travis we will need to construct our own commit range for comparison
+
+if [ -z "$TRAVIS_COMMIT" -a -z "$TRAVIS_COMMIT_RANGE" ]; then
+
+    # If not specified on the command line, figure out the branch that we should be comparing
+    # against
+
+    if [ -z "$remote_branch" ]; then
+        # Not specified
+        upstream=$(git remote|grep upstream)
+        if [ $? -eq 0 ]; then
+            # Note that sed on OSX is bsd and not GNU so we must use [[:space:]] instead of \s
+            remote_branch=$(git remote -v show $upstream | grep 'HEAD branch' | sed 's/[[:space:]]*HEAD branch:[[:space:]]*//')
+            # Be sure to include the full path to the upstream remote in the branch name or we might
+            # be looking at a local branch of the same name!
+            echo $remote_branch | egrep "^$upstream"
+            if [ $? -eq 1 ]; then
+                remote_branch="$upstream/$remote_branch"
+            else
+                echo "Could not discover branch for comparison, no remote 'upstream' configured." >&2
+                echo "Specify with --remote" >&2
+                exit 1
+            fi
+        else
+            echo "Could not discover branch for comparison, no remote 'upstream' configured." >&2
+            echo "Specify with --remote" >&2
+            exit 1
+        fi
+    fi
+
+    # We must update the local metadata for the remote or we may not get the latest commit
+    git remote update $upstream &> /dev/null
+
+    # The range is the latest commit on the remote branch and HEAD on this branch
+    TRAVIS_COMMIT_RANGE=$(git rev-parse --verify --quiet $remote_branch)"...HEAD"
+
+    echo "Comparing HEAD to $remote_branch ($(git rev-parse --verify --quiet $remote_branch))"
+fi
 
 # Get the type of this XDMoD repository.
 repo_type="$("$script_dir/check-repo-type.sh")"
@@ -45,7 +129,8 @@ if ! git show --format='' --no-patch "$commit_range_start" &>/dev/null; then
     fi
 fi
 
-# Get the files changed by this commit (excluding deleted files).
+# Get the files changed by this commit (excluding deleted files). If there is no TRAVIS_COMMIT_RANGE
+# then it will show currently staged files. This is equivalent to HEAD.
 files_changed=()
 while IFS= read -r -d $'\0' file; do
     files_changed+=("$file")
@@ -78,6 +163,38 @@ while IFS= read -r -d $'\0' file; do
         json_files_added+=("$file")
     fi
 done < <(git diff --name-only --diff-filter=A -z "$TRAVIS_COMMIT_RANGE")
+
+# Find tracked files that were added (staged) or modified but not staged
+
+if [ -n "$remote_branch" ]; then
+    while IFS= read -r -d $'\0' line; do
+        # Note that a new file that has been added and subsequently modfified will be "AM" and we
+        # will treat these as added.
+
+        # Note that $line must be quoted when echoed or echo will remove leading spaces!
+        file=$(echo "$line" | egrep '^[[:space:]]*(A|M)' | cut -c 4-)
+        operation=$(echo "$line" | egrep '^[[:space:]]*(A|M)' | cut -c -2)
+
+        if [ "A" = "$(echo "$operation" | cut -c 1)" ]; then
+            if [[ "$file" == *.php ]]; then
+                php_files_added+=("$file")
+            elif [[ "$file" == *.js ]]; then
+                js_files_added+=("$file")
+            elif [[ "$file" == *.json ]]; then
+                json_files_added+=("$file")
+            fi
+        elif [ "M" = "$(echo "$operation" | cut -c 2)" ]; then
+            if [[ "$file" == *.php ]]; then
+                php_files_changed+=("$file")
+            elif [[ "$file" == *.js ]]; then
+                js_files_changed+=("$file")
+            elif [[ "$file" == *.json ]]; then
+                json_files_changed+=("$file")
+            fi
+        fi
+
+    done < <(git status -sz -uno)
+fi
 
 # Set up exit value for whole script and function for updating it.
 script_exit_value=0
@@ -171,6 +288,10 @@ update_script_exit_value $style_exit_value
 end_travis_fold style
 
 print_section_results "Style tests" $style_exit_value
+
+if [ $only_style_tests -eq 1 ]; then
+    exit 0
+fi
 
 # Perform unit tests.
 start_travis_fold unit
