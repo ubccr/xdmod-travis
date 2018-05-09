@@ -73,8 +73,7 @@ function install_dependencies() {
             fi
 
             # Update npm.
-            echo "NPM Version: "
-            npm -v
+            npm install npm@5.8.0 -g
 
             npm_initialized=true
         fi
