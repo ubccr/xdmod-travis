@@ -133,7 +133,10 @@ fi
 # then it will show currently staged files. This is equivalent to HEAD.
 files_changed=()
 while IFS= read -r -d $'\0' file; do
-    files_changed+=("$file")
+    # Do not include test artifact files
+    if [[ ! $file =~ ^tests/artifacts ]]; then
+        files_changed+=("$file")
+    fi
 done < <(git diff --name-only --diff-filter=da -z "$TRAVIS_COMMIT_RANGE")
 
 # Separate the changed files by language.
@@ -155,6 +158,10 @@ php_files_added=()
 js_files_added=()
 json_files_added=()
 while IFS= read -r -d $'\0' file; do
+    # Do not include test artifact files
+    if [[ $file =~ ^tests/artifacts ]]; then
+        continue
+    fi
     if [[ "$file" == *.php ]]; then
         php_files_added+=("$file")
     elif [[ "$file" == *.js ]]; then
