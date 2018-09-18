@@ -40,6 +40,19 @@ function print_section_results() {
     fi
 }
 
+function array_contains() {
+    local haystack="$1[@]"
+    local needle=$2
+    local in=1
+    for element in "${!haystack}"; do
+        if [[ $element == $needle ]]; then
+            in=0
+            break
+        fi
+    done
+    return $in
+}
+
 # Set the location of the Open XDMoD source code.
 if [ -z "$XDMOD_SOURCE_DIR" ]; then
     XDMOD_SOURCE_DIR="$(pwd)"

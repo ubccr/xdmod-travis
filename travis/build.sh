@@ -143,6 +143,7 @@ done < <(git diff --name-only --diff-filter=dar -z "$TRAVIS_COMMIT_RANGE")
 php_files_changed=()
 js_files_changed=()
 json_files_changed=()
+other_files_changed=()
 for file in "${files_changed[@]}"; do
     if [[ "$file" == *.php ]]; then
         php_files_changed+=("$file")
@@ -150,6 +151,8 @@ for file in "${files_changed[@]}"; do
         js_files_changed+=("$file")
     elif [[ "$file" == *.json ]]; then
         json_files_changed+=("$file")
+    else
+        other_files_changed+=("$file")
     fi
 done
 
@@ -295,6 +298,31 @@ update_script_exit_value $style_exit_value
 end_travis_fold style
 
 print_section_results "Style tests" $style_exit_value
+
+# Perform extra tests
+start_travis_fold extra
+echo "Running extra tests..."
+
+extra_exit_value=0
+for file in "${php_files_changed[@]}" "${js_files_changed[@]}" "${json_files_changed[@]}"; do
+    gdiff=$(git diff -w --ignore-blank-lines $commit_range_start -- $file)
+    if [ -z "$gdiff" ]; then
+        echo "$file only contains whitespace changes"
+        extra_exit_value=2
+    fi
+done
+
+if array_contains json_files_changed 'composer.json'; then
+    if ! array_contains other_files_changed 'composer.lock'; then
+        echo "composer.json file changed, but no corresponding change to the lock file"
+        extra_exit_value=2
+    fi
+fi
+
+update_script_exit_value $extra_exit_value
+end_travis_fold extra
+
+print_section_results "Extra tests" $extra_exit_value
 
 if [ $only_style_tests -eq 1 ]; then
     exit 0
