@@ -140,7 +140,6 @@ files_changed=()
 while IFS= read -r -d $'\0' file; do
   if file $file | grep -q "text" ; then
       if [ "$(tail -c 1 $file)" ]; then
-          #echo "$file is not POSIX compliant (missing EOF newline)"
           posix_fails+=("$file")
           extra_exit_value=2
       fi
@@ -175,7 +174,6 @@ json_files_added=()
 while IFS= read -r -d $'\0' file; do
     if file $file | grep -q "text" ; then
         if [ "$(tail -c 1 $file)" ]; then
-            #echo "$file is not POSIX compliant (missing EOF newline)"
             extra_exit_value=2
             posix_fails+=("$file")
         fi
