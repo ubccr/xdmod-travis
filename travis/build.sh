@@ -129,14 +129,22 @@ if ! git show --format='' --no-patch "$commit_range_start" &>/dev/null; then
     fi
 fi
 
+# Extra tests will also get tested when checking for POSIX compliance
+# so initialize it here
+posix_fails=()
+extra_exit_value=0
+
 # Get the files changed by this commit (excluding deleted files). If there is no TRAVIS_COMMIT_RANGE
 # then it will show currently staged files. This is equivalent to HEAD.
 files_changed=()
 while IFS= read -r -d $'\0' file; do
-    if [ "$(tail -c 1 $file)" ]; then
-        echo "CHANGED $file is not POSIX compliant (missing EOF newline)"
-        extra_exit_value=2
-    fi
+  if file $file | grep -q "text" ; then
+      if [ "$(tail -c 1 $file)" ]; then
+          #echo "$file is not POSIX compliant (missing EOF newline)"
+          posix_fails+=("$file")
+          extra_exit_value=2
+      fi
+  fi
     # Do not include test artifact files
     if [[ ! $file =~ ^tests/artifacts ]]; then
         files_changed+=("$file")
@@ -165,9 +173,12 @@ php_files_added=()
 js_files_added=()
 json_files_added=()
 while IFS= read -r -d $'\0' file; do
-    if [ "$(tail -c 1 $file)" ]; then
-        echo "NEW $file is not POSIX compliant (missing EOF newline)"
-        extra_exit_value=2
+    if file $file | grep -q "text" ; then
+        if [ "$(tail -c 1 $file)" ]; then
+            #echo "$file is not POSIX compliant (missing EOF newline)"
+            extra_exit_value=2
+            posix_fails+=("$file")
+        fi
     fi
     # Do not include test artifact files
     if [[ $file =~ ^tests/artifacts ]]; then
@@ -311,7 +322,6 @@ print_section_results "Style tests" $style_exit_value
 start_travis_fold extra
 echo "Running extra tests..."
 
-extra_exit_value=0
 for file in "${php_files_changed[@]}" "${js_files_changed[@]}" "${json_files_changed[@]}"; do
     gdiff=$(git diff -w --ignore-blank-lines $commit_range_start -- $file)
     if [ -z "$gdiff" ]; then
@@ -326,6 +336,10 @@ if array_contains json_files_changed 'composer.json'; then
         extra_exit_value=2
     fi
 fi
+
+for file in "${posix_fails[@]}"; do
+  echo "$file is not POSIX compliant (missing EOF newline)"
+done
 
 update_script_exit_value $extra_exit_value
 end_travis_fold extra
