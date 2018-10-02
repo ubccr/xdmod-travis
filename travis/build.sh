@@ -133,6 +133,10 @@ fi
 # then it will show currently staged files. This is equivalent to HEAD.
 files_changed=()
 while IFS= read -r -d $'\0' file; do
+    if [ "$(tail -c 1 $file)" ]; then
+        echo "CHANGED $file is not POSIX compliant (missing EOF newline)"
+        extra_exit_value=2
+    fi
     # Do not include test artifact files
     if [[ ! $file =~ ^tests/artifacts ]]; then
         files_changed+=("$file")
@@ -161,6 +165,10 @@ php_files_added=()
 js_files_added=()
 json_files_added=()
 while IFS= read -r -d $'\0' file; do
+    if [ "$(tail -c 1 $file)" ]; then
+        echo "NEW $file is not POSIX compliant (missing EOF newline)"
+        extra_exit_value=2
+    fi
     # Do not include test artifact files
     if [[ $file =~ ^tests/artifacts ]]; then
         continue
