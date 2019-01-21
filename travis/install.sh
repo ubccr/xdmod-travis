@@ -17,22 +17,6 @@ fi
 # For the remainder of this script, quit immediately if a command fails.
 set -e
 
-# Install global dependencies.
-start_travis_fold global-dependencies
-echo "Installing global dependencies..."
-
-#fix for https://github.com/travis-ci/travis-ci/issues/8365
-pear config-set php_dir "$(php -r 'echo substr(get_include_path(),2);')"
-
-# Update PEAR.
-pear channel-update pear.php.net
-
-# Install core's PEAR dependencies.
-pear install --alldeps Log
-
-end_travis_fold global-dependencies
-echo
-
 # Initialize variables for tracking application-level package manager initialization.
 composer_initialized=false
 npm_initialized=false
