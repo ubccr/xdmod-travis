@@ -139,7 +139,7 @@ extra_exit_value=0
 files_changed=()
 while IFS= read -r -d $'\0' file; do
   if file $file | grep -q "text" ; then
-      if [ "$(tail -c 1 $file)" ]; then
+      if [ "$(tail -c 1 '$file')" ]; then
           posix_fails+=("$file")
           extra_exit_value=2
       fi
@@ -173,7 +173,7 @@ js_files_added=()
 json_files_added=()
 while IFS= read -r -d $'\0' file; do
     if file $file | grep -q "text" ; then
-        if [ "$(tail -c 1 $file)" ]; then
+        if [ "$(tail -c 1 '$file')" ]; then
             extra_exit_value=2
             posix_fails+=("$file")
         fi
