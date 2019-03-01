@@ -27,5 +27,9 @@
           <property name="absoluteLineLimit" value="0"/>
       </properties>
   </rule>
-  <rule ref="VariableAnalysis"/>
+  <rule ref="VariableAnalysis">
+    <properties>
+      <property name="validUnusedVariableNames" value="unused" />
+    </properties>
+  </rule>
 </ruleset>
