@@ -3,12 +3,13 @@
     "description": "Scripts and other assets for testing Open XDMoD and Open XDMoD modules.",
     "config": {
         "platform": {
-            "php": "5.3.3"
+            "php": "5.4.16"
         },
         "secure-http": false
     },
     "require-dev": {
-        "squizlabs/php_codesniffer": "^2.8.0"
+        "dealerdirect/phpcodesniffer-composer-installer": "^0.5.0",
+        "sirbrillig/phpcs-variable-analysis": "^2.0"
     },
     "license": "LGPL-3.0",
     "authors": [
@@ -16,5 +17,8 @@
             "name": "The XDMoD Team",
             "email": "ccr-xdmod-help@buffalo.edu"
         }
-    ]
+    ],
+    "require": {
+        "squizlabs/php_codesniffer": "^3.3"
+    }
 }
