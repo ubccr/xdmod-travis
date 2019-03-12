@@ -48,6 +48,8 @@ def value_or_else(data, key, default=None):
     :param default:
     :return:
     """
+    if default is None:
+        default = {}
     return data[key] if key in data else default
 
 
