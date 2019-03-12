@@ -15,11 +15,10 @@ def main(orig_file, new_file):
     new_content = read_json(new_file)
 
     for key in ['require', 'require-dev', 'extra']:
-        left = value_or_else(orig_content, key)
-        right = value_or_else(new_content, key)
+        left = orig_content.get(key, {})
+        right = new_content.get(key, {})
 
-        (added, removed, modified) = dict_compare(left, right)
-        if len(added) > 0 or len(removed) > 0 or len(modified) > 0:
+        if left != right:
             exit(1)
 
 
@@ -31,40 +30,6 @@ def read_json(path):
     """
     with open(path, 'r') as fh:
         return json.load(fh)
-
-
-def value_or_else(data, key, default=None):
-    """
-    A helper method that retrieves the value from `data` for `key` if it exists,
-    else it returns `default`.
-
-    :param dict data:
-    :param string key:
-    :param default:
-    :return:
-    """
-    if default is None:
-        default = {}
-    return data[key] if key in data else default
-
-
-def dict_compare(left, right):
-    """
-    Compares two dictionaries, left to right. It returns a 3-tuple that contains
-    the entries that were added, removed, and modified.
-
-    :param dict left:
-    :param dict right:
-    :return: (added, removed, modified)
-    """
-    lkeys = set(left.keys())
-    rkeys = set(right.keys())
-    intersect_keys = lkeys.intersection(rkeys)
-    added = lkeys - rkeys
-    removed = rkeys - lkeys
-    modified = {o: (left[o], right[o]) for o in intersect_keys if
-                left[o] != right[o]}
-    return added, removed, modified
 
 
 if __name__ == '__main__':
