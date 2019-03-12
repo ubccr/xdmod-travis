@@ -35,7 +35,7 @@ def read_json(path):
     :return:
     """
     with open(path, 'r') as fh:
-        return json.loads(fh.read())
+        return json.load(fh)
 
 
 def value_or_else(data, key, default=None):
