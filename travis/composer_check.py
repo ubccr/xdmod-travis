@@ -1,10 +1,5 @@
 import argparse
-import os
 import json
-
-# the scripts current working directory. Used in defining default values for
-# this script
-cwd = os.getcwd()
 
 
 def main(orig_file, new_file):
@@ -77,10 +72,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description="Determines whether or not composer.json changes require an associated composer.lock change.")
     parser.add_argument('original_file', type=str, nargs="?",
-                        default=os.path.join(cwd, "composer.orig.json"),
+                        default="composer.orig.json",
                         help="The original version of composer.json")
     parser.add_argument('new_file', type=str, nargs="?",
-                        default=os.path.join(cwd, 'composer.json'))
+                        default="composer.json")
 
     args = parser.parse_args()
 
