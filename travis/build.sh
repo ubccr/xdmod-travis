@@ -331,10 +331,23 @@ for file in "${php_files_changed[@]}" "${js_files_changed[@]}" "${json_files_cha
 done
 
 if array_contains json_files_changed 'composer.json'; then
-    if ! array_contains other_files_changed 'composer.lock'; then
-        echo "composer.json file changed, but no corresponding change to the lock file"
-        extra_exit_value=2
+    # retrieve what composer looked like originally
+    git show "$commit_range_start:composer.json" > composer.orig.json
+
+    # determine whether or not `composer.json` has been changed. If the script
+    # exits w/ a 0 then there has been no change. If it exits with anything
+    # else then we need to make sure that `composer.lock` has been updated.
+    python "$script_dir/composer_check.py"
+
+    if [ $? != 0 ]; then
+        if ! array_contains other_files_changed 'composer.lock'; then
+            echo "composer.json file changed, but no corresponding change to the lock file"
+            extra_exit_value=2
+        fi
     fi
+
+    # Make sure to remove the previously generated `original` file.
+    rm composer.orig.json
 fi
 
 for file in "${posix_fails[@]}"; do
