@@ -330,6 +330,12 @@ for file in "${php_files_changed[@]}" "${js_files_changed[@]}" "${json_files_cha
     fi
 done
 
+if ! git diff --check $TRAVIS_COMMIT_RANGE;
+then
+    echo "git diff --check failed"
+    extra_exit_value=2
+fi
+
 if array_contains json_files_changed 'composer.json'; then
     # retrieve what composer looked like originally
     git show "$commit_range_start:composer.json" > composer.orig.json
