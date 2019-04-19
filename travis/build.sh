@@ -149,7 +149,7 @@ while IFS= read -r -d $'\0' file; do
     if [[ ! $file =~ ^tests/artifacts ]]; then
         files_changed+=("$file")
     fi
-done < <(git diff --name-only --diff-filter=dar -z "$TRAVIS_COMMIT_RANGE")
+done < <(git -c diff.renameLimit=6000 diff --name-only --diff-filter=dar -z "$TRAVIS_COMMIT_RANGE")
 
 # Separate the changed files by language.
 php_files_changed=()
@@ -191,7 +191,7 @@ while IFS= read -r -d $'\0' file; do
     elif [[ "$file" == *.json ]]; then
         json_files_added+=("$file")
     fi
-done < <(git diff --name-only --diff-filter=AR -z "$TRAVIS_COMMIT_RANGE")
+done < <(git -c diff.renameLimit=6000 diff --name-only --diff-filter=AR -z "$TRAVIS_COMMIT_RANGE")
 
 # Find tracked files that were added (staged) or modified but not staged
 
