@@ -30,6 +30,7 @@
   <rule ref="VariableAnalysis">
     <properties>
       <property name="validUnusedVariableNames" value="unused" />
+      <property name="allowUnusedFunctionParameters" value="true" />
     </properties>
   </rule>
 </ruleset>
