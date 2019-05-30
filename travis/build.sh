@@ -374,12 +374,9 @@ start_travis_fold unit
 echo "Running unit tests..."
 
 unit_exit_value=0
-php_unit_test_path="tests/unit_tests/runtests.sh"
-if [ "$repo_type" == "core" ]; then
-    php_unit_test_path="open_xdmod/modules/xdmod/$php_unit_test_path"
-    if ! [ -e "$php_unit_test_path" ]; then
-        php_unit_test_path="open_xdmod/modules/xdmod/tests/runtests.sh"
-    fi
+php_unit_test_path="tests/unit/runtests.sh"
+if [ "$repo_type" != "core" ]; then
+    php_unit_test_path="tests/unit_tests/runtests.sh"
 fi
 if [ -e "$php_unit_test_path" ]; then
     "$php_unit_test_path"
