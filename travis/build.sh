@@ -295,9 +295,9 @@ for file in "${php_files_added[@]}"; do
     fi
 done
 for file in "${js_files_changed[@]}"; do
-    eslint "$file" -f json > "$file.lint.new.json"
+    eslint --rule 'indent: 0' "$file" -f json > "$file.lint.new.json"
     if [ $? != 0 ]; then
-        git show "$commit_range_start:$file" | eslint --stdin --stdin-filename "$file" -f json > "$file.lint.orig.json"
+        git show "$commit_range_start:$file" | eslint --rule 'indent: 0' --stdin --stdin-filename "$file" -f json > "$file.lint.orig.json"
         lint-diff "$file.lint.orig.json" "$file.lint.new.json"
         if [ $? != 0 ]; then
             style_exit_value=2
