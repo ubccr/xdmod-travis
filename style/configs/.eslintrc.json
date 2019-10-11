@@ -106,6 +106,7 @@
       {
         "props": false
       }
-    ]
+    ],
+    "yoda": "off"
   }
 }
