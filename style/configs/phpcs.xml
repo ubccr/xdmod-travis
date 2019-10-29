@@ -33,4 +33,6 @@
       <property name="allowUnusedFunctionParameters" value="true" />
     </properties>
   </rule>
+  <rule ref="Squiz.PHP.CommentedOutCode">
+  </rule>
 </ruleset>
