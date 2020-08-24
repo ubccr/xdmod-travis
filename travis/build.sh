@@ -156,8 +156,9 @@ php_files_changed=()
 js_files_changed=()
 json_files_changed=()
 other_files_changed=()
+php_regex='\bphp script\b'
 for file in "${files_changed[@]}"; do
-    if [[ "$file" == *.php ]]; then
+    if [[ "$file" == *.php ]] || [[ "$(file -b -k "$file")" =~ $php_regex ]]; then
         php_files_changed+=("$file")
     elif [[ "$file" == *.js ]]; then
         js_files_changed+=("$file")
