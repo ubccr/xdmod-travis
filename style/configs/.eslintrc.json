@@ -107,6 +107,7 @@
         "props": false
       }
     ],
-    "yoda": "off"
+    "yoda": "off",
+    "no-template-curly-in-string": "off"
   }
 }
