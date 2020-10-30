@@ -2,6 +2,11 @@
 
 # Install required components for Travis tests.
 
+pushd $HOME
+echo "Attempt to revert to version 1 composer"
+composer self-update --1 --stable
+popd
+
 script_dir="$(cd "$(dirname $0)" || exit 2; pwd -P)"
 qa_dir="$(dirname "$script_dir")"
 
