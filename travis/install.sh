@@ -37,9 +37,13 @@ function install_dependencies() {
     if [ -e "composer.json" ]; then
         # If Composer has not been initialized yet, do so.
         if ! $composer_initialized; then
+            mv composer.json composer.json___
+            mv composer.lock composer.lock___
             echo "Updating Composer..."
             composer self-update --1 --stable
             composer_initialized=true
+            mv composer.lock___ composer.lock
+            mv composer.json___ composer.json
         fi
 
         composer install
