@@ -38,7 +38,7 @@ function install_dependencies() {
         # If Composer has not been initialized yet, do so.
         if ! $composer_initialized; then
             echo "Updating Composer..."
-            composer self-update --stable
+            composer self-update --1 --stable
             composer_initialized=true
         fi
 
