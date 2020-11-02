@@ -4,6 +4,7 @@
 
 pushd $HOME
 echo "Attempt to revert to version 1 composer"
+composer self-update --rollback
 composer self-update --1 --stable
 popd
 
