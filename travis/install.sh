@@ -25,7 +25,6 @@ set -e
 
 # Initialize variables for tracking application-level package manager initialization.
 composer_initialized=false
-npm_initialized=false
 
 # Install application-level dependencies declared in the given directory.
 #
@@ -53,21 +52,6 @@ function install_dependencies() {
 
     # If npm dependencies are declared, install them.
     if [ -e "package.json" ]; then
-        # If npm has not been initialized yet, do so.
-        if ! $npm_initialized; then
-            # If set, use version of Node set in environment variable.
-            if [ -n "$NODE_VERSION" ]; then
-                source ~/.nvm/nvm.sh
-                nvm install "$NODE_VERSION"
-                nvm use "$NODE_VERSION"
-            fi
-
-            # Update npm.
-            npm install npm@5.8.0 -g
-
-            npm_initialized=true
-        fi
-
         # Install repo's npm dependencies.
         echo "Installing npm dependencies..."
         npm install

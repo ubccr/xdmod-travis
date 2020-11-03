@@ -102,12 +102,6 @@ new_bin_paths="$new_bin_paths:$qa_dir/vendor/bin:$qa_dir/node_modules/.bin"
 PATH="$new_bin_paths:$PATH"
 export PATH
 
-if [ -n "$NODE_VERSION" ]; then
-    source ~/.nvm/nvm.sh
-    nvm use "$NODE_VERSION"
-    echo
-fi
-
 # Fix for Travis not specifying a range if testing the first commit of
 # a new branch on push
 if [ -z "$TRAVIS_COMMIT_RANGE" ]; then
