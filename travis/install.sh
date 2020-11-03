@@ -5,8 +5,7 @@
 pushd $HOME
 echo "Attempt to revert to version 1 composer"
 composer self-update --rollback
-composer self-update --stable
-composer self-update --1 --stable
+composer self-update 1.10.17
 popd
 
 script_dir="$(cd "$(dirname $0)" || exit 2; pwd -P)"
@@ -44,13 +43,9 @@ function install_dependencies() {
     if [ -e "composer.json" ]; then
         # If Composer has not been initialized yet, do so.
         if ! $composer_initialized; then
-            mv composer.json composer.json___
-            mv composer.lock composer.lock___
             echo "Updating Composer..."
             composer self-update --1 --stable
             composer_initialized=true
-            mv composer.lock___ composer.lock
-            mv composer.json___ composer.json
         fi
 
         composer install
