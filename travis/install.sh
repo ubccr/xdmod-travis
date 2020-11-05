@@ -56,7 +56,7 @@ function install_dependencies() {
         # If npm has not been initialized yet, do so.
         if ! $npm_initialized; then
             # Update npm.
-            npm install -g npm@latest
+            #npm install -g npm@latest
 
             npm_initialized=true
         fi
