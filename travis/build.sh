@@ -246,7 +246,7 @@ for file in "${php_files_changed[@]}" "${php_files_added[@]}"; do
     fi
 done
 for file in "${js_files_changed[@]}" "${js_files_added[@]}"; do
-    eslint "$file"
+    eslint "$file" -o $SHIPPABLE_BUILD_DIR/shipppable/testresults/xdmod-eslint-"$(basename "$file")".xml -f junit
     if [ $? != 0 ]; then
         syntax_exit_value=2
     fi
@@ -375,7 +375,7 @@ if [ "$repo_type" != "core" ]; then
     php_unit_test_path="tests/unit_tests/runtests.sh"
 fi
 if [ -e "$php_unit_test_path" ]; then
-    "$php_unit_test_path"
+    "$php_unit_test_path --junit-output-dir `pwd`/shippable/testresults"
     if [ $? != 0 ]; then
         unit_exit_value=2
     fi
