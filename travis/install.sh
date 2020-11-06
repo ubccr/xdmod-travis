@@ -25,7 +25,6 @@ set -e
 
 # Initialize variables for tracking application-level package manager initialization.
 composer_initialized=false
-npm_initialized=false
 
 # Install application-level dependencies declared in the given directory.
 #
@@ -53,14 +52,6 @@ function install_dependencies() {
 
     # If npm dependencies are declared, install them.
     if [ -e "package.json" ]; then
-        # If npm has not been initialized yet, do so.
-        if ! $npm_initialized; then
-            # Update npm.
-            #npm install -g npm@latest
-
-            npm_initialized=true
-        fi
-
         # Install repo's npm dependencies.
         echo "Installing npm dependencies..."
         npm install
