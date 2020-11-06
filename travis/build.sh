@@ -245,8 +245,14 @@ for file in "${php_files_changed[@]}" "${php_files_added[@]}"; do
         syntax_exit_value=2
     fi
 done
+
+eslint_args=""
+if [ -n "$SHIPPABLE_BUILD_DIR" ]; then
+  eslint_args="-o ./shipppable/testresults/xdmod-eslint-$(basename "$file").xml -f junit"
+fi
+
 for file in "${js_files_changed[@]}" "${js_files_added[@]}"; do
-    eslint "$file"
+    eslint "$file" "$eslint_args"
     if [ $? != 0 ]; then
         syntax_exit_value=2
     fi
@@ -371,11 +377,19 @@ echo "Running unit tests..."
 
 unit_exit_value=0
 php_unit_test_path="tests/unit/runtests.sh"
+php_unit_test_args=""
+
 if [ "$repo_type" != "core" ]; then
     php_unit_test_path="tests/unit_tests/runtests.sh"
 fi
+
+if [ -n "$SHIPPABLE_BUILD_DIR" ]; then
+  php_unit_test_path="$SHIPPABLE_BUILD_DIR/tests/unit/runtests.sh"
+  php_unit_test_args="--junit-output-dir $SHIPPABLE_BUILD_DIR/shippable/testresults"
+fi
+
 if [ -e "$php_unit_test_path" ]; then
-    "$php_unit_test_path"
+    $php_unit_test_path "$php_unit_test_args"
     if [ $? != 0 ]; then
         unit_exit_value=2
     fi
