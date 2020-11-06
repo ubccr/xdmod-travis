@@ -375,11 +375,7 @@ if [ "$repo_type" != "core" ]; then
     php_unit_test_path="tests/unit_tests/runtests.sh"
 fi
 if [ -e "$php_unit_test_path" ]; then
-    if [ ! -d `pwd`/shippable/testresults ]; then
-      mkdir -p `pwd`/shippable/testresults
-    fi
-
-    "$php_unit_test_path --junit-output-dir `pwd`/shippable/testresults"
+    "$php_unit_test_path --junit-output-dir shippable/testresults"
     if [ $? != 0 ]; then
         unit_exit_value=2
     fi
