@@ -246,7 +246,7 @@ for file in "${php_files_changed[@]}" "${php_files_added[@]}"; do
     fi
 done
 for file in "${js_files_changed[@]}" "${js_files_added[@]}"; do
-    eslint "$file" -o $SHIPPABLE_BUILD_DIR/shipppable/testresults/xdmod-eslint-"$(basename "$file")".xml -f junit
+    eslint "$file" -o ./shipppable/testresults/xdmod-eslint-"$(basename "$file")".xml -f junit
     if [ $? != 0 ]; then
         syntax_exit_value=2
     fi
