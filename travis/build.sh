@@ -374,6 +374,11 @@ php_unit_test_path="tests/unit/runtests.sh"
 if [ "$repo_type" != "core" ]; then
     php_unit_test_path="tests/unit_tests/runtests.sh"
 fi
+
+if [ -n "$SHIPPABLE_BUILD_DIR" ]; then
+  php_unit_test_path="$SHIPPABLE_BUILD_DIR/tests/unit/runtests.sh"
+fi
+
 if [ -e "$php_unit_test_path" ]; then
     "$php_unit_test_path --junit-output-dir shippable/testresults"
     if [ $? != 0 ]; then
