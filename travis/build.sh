@@ -380,7 +380,7 @@ if [ -n "$SHIPPABLE_BUILD_DIR" ]; then
 fi
 
 if [ -e "$php_unit_test_path" ]; then
-    "$php_unit_test_path --junit-output-dir $SHIPPABLE_BUILD_DIR/shippable/testresults"
+    $php_unit_test_path --junit-output-dir $SHIPPABLE_BUILD_DIR/shippable/testresults
     if [ $? != 0 ]; then
         unit_exit_value=2
     fi
