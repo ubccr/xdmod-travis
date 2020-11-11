@@ -16,7 +16,7 @@ To make use of the linters used by Open XDMoD on your local system, perform the 
 
 ### [Travis CI](https://travis-ci.org)
 
-Create a `.travis.yml` file in the root of your module's repository. You can copy the template at path [`travis/template.yml`](travis/template.yml) to get started.
+Create a `.travis.yml` file in the root of your module's repository. You can copy the template at path [`travis/template.yml`](scripts/template.yml) to get started.
 
 In `.travis.yml`, set the following environment variables to values applicable to your module:
 
