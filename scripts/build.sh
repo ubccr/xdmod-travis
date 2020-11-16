@@ -423,7 +423,7 @@ fi
 
 if [ "$repo_type" == "module" ]; then
     echo "Building $XDMOD_MODULE_NAME module..."
-    "$build_package_path" --module "$XDMOD_MODULE_DIR"
+    "$build_package_path" --module "$XDMOD_MODULE_NAME"
     if [ $? != 0 ]; then
         build_exit_value=2
     fi
