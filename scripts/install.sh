@@ -65,29 +65,6 @@ function install_dependencies() {
 # Install QA dependencies.
 install_dependencies "$qa_dir"
 
-# If this repo is a module, get and set up the corresponding version of Open XDMoD.
-if [ "$repo_type" == "module" ]; then
-    start_travis_fold open-xdmod
-    echo "Obtaining and integrating with Open XDMoD code..."
-
-    xdmod_branch="${XDMOD_MAIN_BRANCH:-$TRAVIS_BRANCH}"
-    echo "Cloning Open XDMoD branch '$xdmod_branch'"
-    git clone --depth=1 --branch="$xdmod_branch" https://github.com/ubccr/xdmod.git "$XDMOD_SOURCE_DIR"
-
-    pushd "$XDMOD_SOURCE_DIR" >/dev/null
-    echo "Retrieving Open XDMoD submodules..."
-    git submodule update --init --recursive
-    popd >/dev/null
-
-    # Create a symlink from Open XDMoD to this module.
-    ln -s "$(pwd)" "$XDMOD_SOURCE_DIR/open_xdmod/modules/$XDMOD_MODULE_DIR"
-
-    end_travis_fold open-xdmod
-    echo
-
-    # Install Open XDMoD dependencies.
-    install_dependencies "$XDMOD_SOURCE_DIR"
-fi
 
 # Install this repo's dependencies.
 install_dependencies "$(pwd)"
