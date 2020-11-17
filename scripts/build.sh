@@ -462,7 +462,7 @@ fi
 if [ "$repo_type" == "module" ]; then
     echo "Installing $XDMOD_MODULE_NAME module..."
     cd .. || exit 2
-    module_tar="$(find . -regex "^\./xdmod-${XDMOD_MODULE_DIR}-[0-9]+[^/]*\.tar\.gz$")"
+    module_tar="$(find . -regex "^\./xdmod-${XDMOD_MODULE_NAME}-[0-9]+[^/]*\.tar\.gz$")"
     tar -xf "$module_tar"
     cd "$(basename "$module_tar" .tar.gz)" || exit 2
     ./install --prefix="$XDMOD_INSTALL_DIR"
