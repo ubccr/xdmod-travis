@@ -102,12 +102,6 @@ new_bin_paths="$new_bin_paths:$qa_dir/vendor/bin:$qa_dir/node_modules/.bin"
 PATH="$new_bin_paths:$PATH"
 export PATH
 
-if [ -n "$NODE_VERSION" ]; then
-    source ~/.nvm/nvm.sh
-    nvm use "$NODE_VERSION"
-    echo
-fi
-
 # Fix for Travis not specifying a range if testing the first commit of
 # a new branch on push
 if [ -z "$TRAVIS_COMMIT_RANGE" ]; then
@@ -251,8 +245,14 @@ for file in "${php_files_changed[@]}" "${php_files_added[@]}"; do
         syntax_exit_value=2
     fi
 done
+
+eslint_args=""
+if [ -n "$SHIPPABLE_BUILD_DIR" ]; then
+  eslint_args="-o ./shipppable/testresults/xdmod-eslint-$(basename "$file").xml -f junit"
+fi
+
 for file in "${js_files_changed[@]}" "${js_files_added[@]}"; do
-    eslint "$file"
+    eslint "$file" "$eslint_args"
     if [ $? != 0 ]; then
         syntax_exit_value=2
     fi
@@ -377,11 +377,19 @@ echo "Running unit tests..."
 
 unit_exit_value=0
 php_unit_test_path="tests/unit/runtests.sh"
+php_unit_test_args=""
+
 if [ "$repo_type" != "core" ]; then
     php_unit_test_path="tests/unit_tests/runtests.sh"
 fi
+
+if [ -n "$SHIPPABLE_BUILD_DIR" ]; then
+  php_unit_test_path="$SHIPPABLE_BUILD_DIR/tests/unit/runtests.sh"
+  php_unit_test_args="--junit-output-dir $SHIPPABLE_BUILD_DIR/shippable/testresults"
+fi
+
 if [ -e "$php_unit_test_path" ]; then
-    "$php_unit_test_path"
+    $php_unit_test_path "$php_unit_test_args"
     if [ $? != 0 ]; then
         unit_exit_value=2
     fi
@@ -415,7 +423,7 @@ fi
 
 if [ "$repo_type" == "module" ]; then
     echo "Building $XDMOD_MODULE_NAME module..."
-    "$build_package_path" --module "$XDMOD_MODULE_DIR"
+    "$build_package_path" --module "$XDMOD_MODULE_NAME"
     if [ $? != 0 ]; then
         build_exit_value=2
     fi
@@ -454,7 +462,7 @@ fi
 if [ "$repo_type" == "module" ]; then
     echo "Installing $XDMOD_MODULE_NAME module..."
     cd .. || exit 2
-    module_tar="$(find . -regex "^\./xdmod-${XDMOD_MODULE_DIR}-[0-9]+[^/]*\.tar\.gz$")"
+    module_tar="$(find . -regex "^\./xdmod-${XDMOD_MODULE_NAME}-[0-9]+[^/]*\.tar\.gz$")"
     tar -xf "$module_tar"
     cd "$(basename "$module_tar" .tar.gz)" || exit 2
     ./install --prefix="$XDMOD_INSTALL_DIR"
