@@ -1,32 +1,86 @@
-# Use container-based environment for quicker initialization
-sudo: false
+# we utilize `language: none` because we want to utilize our own docker image. Select the correct language for your module.
+language: none
+    env:
+        global:
+            - COMPOSER_ALLOW_SUPERUSER=1
 
-# Specify the build matrix
-language: php
-php:
-    - '5.4'
-    - '7.0'
-    - '7.1.6'
-env:
-    global:
-        - NODE_VERSION=6
-        - XDMOD_TEST_ARTIFACTS_MIRROR="$HOME/xdmod-test-artifacts.git"
-        - XDMOD_MODULE_DIR="mymodule"
-        - XDMOD_MODULE_NAME="My Module"
+            # Make sure to only include the realms your module requires / provides
+            - XDMOD_REALMS='jobs,storage,cloud'
 
-# Add dependency directories to the Travis cache
-cache:
-    directories:
-        - $HOME/.npm
-        - $HOME/.composer/cache
-        - /tmp/pear/cache
-        - $XDMOD_TEST_ARTIFACTS_MIRROR
+            # This is the directory that XDMoD is to be checked out to.
+            - XDMOD_SOURCE_DIR=$SHIPPABLE_BUILD_DIR/../xdmod
 
-# Obtain the shared QA assets before using them.
-before_install: git clone --depth=1 --branch="v1" https://github.com/ubccr/xdmod-qa.git .qa
+            # This is the directory where XDMoD will be source installed to as part of the qa tests
+            - XDMOD_INSTALL_DIR=/xdmod
 
-# Delegate the installation step to the shared Travis installation script
-install: .qa/travis/install.sh
+            # This is required and is the location that your module is checked out to.
+            - XDMOD_MODULE_DIR=$SHIPPABLE_BUILD_DIR
 
-# Delegate the build step to the shared Travis build script
-script: .qa/travis/build.sh
+            # This is required and corresponds to `<xdmod install dir>/open_xdmod/modules/<module>`
+            # We ensure this directory is present by sym-linking the module dir to this location.
+            - XDMOD_MODULE_NAME=supremm
+        matrix:
+            # Having both of these entries will ensure that both the fresh install & upgrade paths are tested.
+            - XDMOD_TEST_MODE=fresh_install
+            - XDMOD_TEST_MODE=upgrade
+    build:
+        cache: true
+        cache_dir_list:
+            - /root/.composer
+        pre_ci:
+            # This is where we build our custom docker image that we'll be using. This assumes that there's a
+            # `Dockerfile` present in $SHIPPABLE_BUILD_DIR
+            - docker build -t pseudo_repo/xdmod-open-supremm:latest .
+        pre_ci_boot:
+            image_name: pseudo_repo/xdmod-open-supremm
+            image_tag: latest
+            pull: false
+            options: "--user root -e HOME=/root --shm-size 2g"
+        ci:
+            # We need to make sure that we have an up to date version of XDMoD checked out that we can install the module into.
+            - git clone --depth=1 --branch=migrate_travis https://github.com/ryanrath/xdmod.git ../xdmod
+
+            # Here we're linking the module directory into the checked out XDMoD's module directory.
+            - ln -s $SHIPPABLE_BUILD_DIR ../xdmod/open_xdmod/modules/$XDMOD_MODULE_NAME
+
+            # Since this is a fresh copy of the XDMoD source control we need to make sure that we install it's dependencies.
+            - composer install -d ../xdmod --no-progress
+
+            # Now that we have a baseline XDMoD source ready to go we can build the RPM's to be installed.
+            - cd ../xdmod && ~/bin/buildrpm xdmod $XDMOD_MODULE_NAME && cd $SHIPPABLE_BUILD_DIR
+
+            # To help the qa scripts determine which files have changed we add an `upstream` remote.
+            - git remote add upstream <git url for your modules upstream repo>
+
+            # This script will take care of installing / configuring the checked out XDMoD & your module. It's keyed
+            # off of the XDMOD_TEST_MODE env variable
+            - ./tests/integration_tests/scripts/bootstrap.sh
+
+            # This script just validates that XDMoD was installed successfully.
+            - ./tests/integration_tests/scripts/validate.sh
+
+            # This will ensure that phpunit and the other dev dependencies are installed.
+            - composer install -d ../xdmod --no-progress
+
+            # We can now run the qa scripts. Note: this is a wrapper script included in the XDMoD source code that just
+            # ensures that the qa tests are only run during the `upgrade` test path. Other then that this script does
+            # the following:
+            #   - clone's $QA_BRANCH of $QA_GIT_URL to $HOME/.qa
+            #   - cd's into $SHIPPABLE_BUILD_DIR ( since this is the code that we want qa to check )
+            #   - Runs `scripts/install.sh` and `scripts/build.sh`
+            - ../xdmod/tests/ci/scripts/qa-test-setup.sh
+
+            # We ensure that dev dependencies are indeed in place.
+            - composer install -d ../xdmod --no-progress
+
+            # We re-export XDMOD_INSTALL_DIR here as the `post-install-test.sh` script expects it to point to the directory
+            # that XDMoD was installed to via RPM.
+            - export XDMOD_INSTALL_DIR=/usr/share/xdmod
+            - ./tests/ci/scripts/post-install-test.sh
+
+            # We then run the rest of XDMoD's automated test suites.
+            - ./tests/integration_tests/runtests.sh --log-junit `pwd`/shippable/testresults/results.xml
+            - ../xdmod/tests/ui/runtests.sh --headless --log-junit $SHIPPABLE_BUILD_DIR/shippable/testresults
+            - ./tests/regression_tests/runtests.sh --junit-output-dir `pwd`/shippable/testresults
+        on_failure:
+            - cat /var/log/xdmod/*

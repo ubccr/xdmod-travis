@@ -14,20 +14,27 @@ To make use of the linters used by Open XDMoD on your local system, perform the 
     1. To install npm dependencies, run `npm install` in the repo's base directory. The programs npm downloads will then be available in `[xdmod-qa]/node_modules/.bin`.
 1. Install the style linter config files to a parent directory of your Open XDMoD repos. Run `[xdmod-qa]/style/install.sh [parent-dir]` to do this easily.
 
-### [Travis CI](https://travis-ci.org)
+### [Shippable](https://www.shippable.com)
 
-Create a `.travis.yml` file in the root of your module's repository. You can copy the template at path [`travis/template.yml`](scripts/template.yml) to get started.
+Create a `shippable.yml` file in the root of your module's repository. You can copy / use the template at path [`scripts/template.yml`](scripts/template.yml) to get started.
 
-In `.travis.yml`, set the following environment variables to values applicable to your module:
+In `shippable.yml` make sure the following environment variables are set with values applicable to your module:
 
-- `XDMOD_MODULE_DIR`: The name of the module's subdirectory inside of Open XDMoD directory `open_xdmod/modules`. (e.g. `appkernels`)
-- `XDMOD_MODULE_NAME`: The reader-friendly name for your module. (e.g. Application Kernels)
+  - `XDMOD_REALMS`: a comma delimited list of the XDMoD realms your module requires and or provides. 
+  - `XDMOD_SOURCE_DIR`: The directory that the XDMoD source code will be checked out to.
+  - `XDMOD_INSTALL_DIR`: The directory that the qa scripts will attempt to perform a source install of XDMoD to.
+  - `XDMOD_MODULE_DIR`: The directory that contains the XDMoD module source code.
+  - `XDMOD_MODULE_NAME`: The name of the XDMoD module that is being tested.
+  
+Optionally you can set the following (`qa-test-setup.sh` is a helper script that resides in the base XDMoD repo that takes care of checking out & running the qa scripts ): 
+  - `QA_BRANCH`: The branch of the qa repo that will be checked out by `qa-test-setup.sh`.
+  - `QA_GIT_URL`: The git repo that will be cloned / used by `qa-test-setup.sh` 
 
 #### Custom Test Hooks
 
 If your module needs to perform custom tests or tasks not run by this repo's scripts, you can create custom scripts in your repo with the following paths and they will be run for you at the specified times. (Remember to make your script files executable!)
 
-- `/.travis/post-install-test.sh`: This will be run after Travis has built and installed Open XDMoD and your module. It will not run if building or installing failed. The script's exit code will be used to determine if post-install tests succeeded or failed.
+- `scripts/post-install-test.sh`: This will be run after Shippable has built and installed Open XDMoD and your module. It will not run if building or installing failed. The script's exit code will be used to determine if post-install tests succeeded or failed.
 
 ## Versioning
 
