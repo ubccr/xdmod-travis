@@ -1,13 +1,5 @@
 #!/usr/bin/env bash
 
-# Install required components for Travis tests.
-
-pushd $HOME
-echo "Attempt to revert to version 1 composer"
-composer self-update --rollback
-composer self-update 1.10.17
-popd
-
 script_dir="$(cd "$(dirname $0)" || exit 2; pwd -P)"
 qa_dir="$(dirname "$script_dir")"
 
@@ -23,48 +15,20 @@ fi
 # For the remainder of this script, quit immediately if a command fails.
 set -e
 
-# Initialize variables for tracking application-level package manager initialization.
-composer_initialized=false
+# Make sure that we're in the QA directory before continuing...
+pushd "$qa_dir" >/dev/null | exit 1
+echo "Installing dependencies for '$qa_dir' ..."
 
-# Install application-level dependencies declared in the given directory.
-#
-# Args:
-#     $1: The directory to install dependencies for.
-function install_dependencies() {
-    dir_path="$1"
-    dir_name="$(basename "$dir_path")"
+# If Composer dependencies are declared, install them.
+if [ -e "composer.json" ]; then
+    echo "Installing Composer dependencies..."
+    composer install
+fi
 
-    start_travis_fold "$dir_name-dependencies"
-    echo "Installing dependencies for \"$dir_path\"..."
-    pushd "$dir_path" >/dev/null
-
-    # If Composer dependencies are declared, install them.
-    if [ -e "composer.json" ]; then
-        # If Composer has not been initialized yet, do so.
-        if ! $composer_initialized; then
-            echo "Updating Composer..."
-            composer self-update --1 --stable
-            composer_initialized=true
-        fi
-
-        composer install
-    fi
-
-    # If npm dependencies are declared, install them.
-    if [ -e "package.json" ]; then
-        # Install repo's npm dependencies.
-        echo "Installing npm dependencies..."
-        npm install
-    fi
-
-    popd >/dev/null
-    end_travis_fold "$dir_name-dependencies"
-    echo
-}
-
-# Install QA dependencies.
-install_dependencies "$qa_dir"
-
-
-# Install this repo's dependencies.
-install_dependencies "$(pwd)"
+# If npm dependencies are declared, install them.
+if [ -e "package.json" ]; then
+    # Install repo's npm dependencies.
+    echo "Installing npm dependencies..."
+    npm install
+fi
+popd >/dev/null | exit 1
