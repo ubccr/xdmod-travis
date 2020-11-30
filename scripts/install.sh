@@ -16,7 +16,7 @@ fi
 set -e
 
 # Make sure that we're in the QA directory before continuing...
-pushd "$qa_dir" >/dev/null | exit 1
+pushd "$qa_dir" >/dev/null || exit 1
 echo "Installing dependencies for '$qa_dir' ..."
 
 echo "Installing Composer dependencies..."
@@ -26,4 +26,4 @@ composer install
 echo "Installing npm dependencies..."
 npm install
 
-popd >/dev/null | exit 1
+popd >/dev/null || exit 1
