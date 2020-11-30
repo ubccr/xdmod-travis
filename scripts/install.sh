@@ -19,16 +19,11 @@ set -e
 pushd "$qa_dir" >/dev/null | exit 1
 echo "Installing dependencies for '$qa_dir' ..."
 
-# If Composer dependencies are declared, install them.
-if [ -e "composer.json" ]; then
-    echo "Installing Composer dependencies..."
-    composer install
-fi
+echo "Installing Composer dependencies..."
+composer install
 
-# If npm dependencies are declared, install them.
-if [ -e "package.json" ]; then
-    # Install repo's npm dependencies.
-    echo "Installing npm dependencies..."
-    npm install
-fi
+# Install repo's npm dependencies.
+echo "Installing npm dependencies..."
+npm install
+
 popd >/dev/null | exit 1
