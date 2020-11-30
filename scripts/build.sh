@@ -54,7 +54,7 @@ done
 
 # When running outside of travis we will need to construct our own commit range for comparison
 
-if [ -z "$TRAVIS_COMMIT" -a -z "$TRAVIS_COMMIT_RANGE" ]; then
+if [ -z "$COMMIT" -a -z "$COMMIT_RANGE" ]; then
 
     # If not specified on the command line, figure out the branch that we should be comparing
     # against
@@ -86,7 +86,7 @@ if [ -z "$TRAVIS_COMMIT" -a -z "$TRAVIS_COMMIT_RANGE" ]; then
     git remote update $upstream &> /dev/null
 
     # The range is the latest commit on the remote branch and HEAD on this branch
-    TRAVIS_COMMIT_RANGE=$(git rev-parse --verify --quiet $remote_branch)"...HEAD"
+    COMMIT_RANGE=$(git rev-parse --verify --quiet $remote_branch)"...HEAD"
 
     echo "Comparing HEAD to $remote_branch ($(git rev-parse --verify --quiet $remote_branch))"
 fi
@@ -104,13 +104,13 @@ export PATH
 
 # Fix for Travis not specifying a range if testing the first commit of
 # a new branch on push
-if [ -z "$TRAVIS_COMMIT_RANGE" ]; then
-    TRAVIS_COMMIT_RANGE="$(git rev-parse --verify --quiet "${TRAVIS_COMMIT}^1")...${TRAVIS_COMMIT}"
+if [ -z "$COMMIT_RANGE" ]; then
+    COMMIT_RANGE="$(git rev-parse --verify --quiet "${COMMIT}^1")...${COMMIT}"
 fi
 
 # Check whether the start of the commit range is available.
 # If it is not available, try fetching the complete history.
-commit_range_start="$(echo "$TRAVIS_COMMIT_RANGE" | sed -E 's/^([a-fA-F0-9]+).*/\1/')"
+commit_range_start="$(echo "$COMMIT_RANGE" | sed -E 's/^([a-fA-F0-9]+).*/\1/')"
 if ! git show --format='' --no-patch "$commit_range_start" &>/dev/null; then
     git fetch --unshallow
 
@@ -128,7 +128,7 @@ fi
 posix_fails=()
 extra_exit_value=0
 
-# Get the files changed by this commit (excluding deleted files). If there is no TRAVIS_COMMIT_RANGE
+# Get the files changed by this commit (excluding deleted files). If there is no COMMIT_RANGE
 # then it will show currently staged files. This is equivalent to HEAD.
 files_changed=()
 while IFS= read -r -d $'\0' file; do
@@ -143,7 +143,7 @@ while IFS= read -r -d $'\0' file; do
     if [[ ! $file =~ ^tests/artifacts ]]; then
         files_changed+=("$file")
     fi
-done < <(git -c diff.renameLimit=6000 diff --name-only --diff-filter=dar -z "$TRAVIS_COMMIT_RANGE")
+done < <(git -c diff.renameLimit=6000 diff --name-only --diff-filter=dar -z "$COMMIT_RANGE")
 
 # Separate the changed files by language.
 php_files_changed=()
@@ -186,7 +186,7 @@ while IFS= read -r -d $'\0' file; do
     elif [[ "$file" == *.json ]]; then
         json_files_added+=("$file")
     fi
-done < <(git -c diff.renameLimit=6000 diff --name-only --diff-filter=AR -z "$TRAVIS_COMMIT_RANGE")
+done < <(git -c diff.renameLimit=6000 diff --name-only --diff-filter=AR -z "$COMMIT_RANGE")
 
 # Find tracked files that were added (staged) or modified but not staged
 
@@ -247,9 +247,9 @@ for file in "${php_files_changed[@]}" "${php_files_added[@]}"; do
 done
 
 eslint_args=""
-if [ -n "$SHIPPABLE_BUILD_DIR" ]; then
-  eslint_args="-o ./shipppable/testresults/xdmod-eslint-$(basename "$file").xml -f junit"
-fi
+#if [ -n "$XDMOD_SOURCE_DIR" ]; then
+#  eslint_args="-o ./shipppable/testresults/xdmod-eslint-$(basename "$file").xml -f junit"
+#fi
 
 for file in "${js_files_changed[@]}" "${js_files_added[@]}"; do
     eslint "$file" "$eslint_args"
@@ -332,7 +332,7 @@ for file in "${php_files_changed[@]}" "${js_files_changed[@]}" "${json_files_cha
     fi
 done
 
-if ! git diff --check $TRAVIS_COMMIT_RANGE ':(exclude)*.sql';
+if ! git diff --check $COMMIT_RANGE ':(exclude)*.sql';
 then
     echo "git diff --check failed"
     extra_exit_value=2
