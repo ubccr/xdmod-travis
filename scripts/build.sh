@@ -52,13 +52,11 @@ while [ "$1" != "" ]; do
     shift
 done
 
-# When running outside of travis we will need to construct our own commit range for comparison
+# Check to see if there is a `COMMIT_RANGE` env variable defined already, if not then we'll attempt to construct one.
+if [ -z "$COMMIT_RANGE" ]; then
 
-if [ -z "$COMMIT" -a -z "$COMMIT_RANGE" ]; then
-
-    # If not specified on the command line, figure out the branch that we should be comparing
-    # against
-
+    # If `remote_branch` is not not specified on the command line, then attempt to identify if the repo has an `upstream`
+    # branch that we can use instead.
     if [ -z "$remote_branch" ]; then
         # Not specified
         upstream=$(git remote|grep upstream)
@@ -85,10 +83,18 @@ if [ -z "$COMMIT" -a -z "$COMMIT_RANGE" ]; then
     # We must update the local metadata for the remote or we may not get the latest commit
     git remote update $upstream &> /dev/null
 
-    # The range is the latest commit on the remote branch and HEAD on this branch
-    COMMIT_RANGE=$(git rev-parse --verify --quiet $remote_branch)"...HEAD"
+    # attempt to retrieve the remote_branch commit to be used in the COMMIT_RANGE
+    remote_branch_commit=$(git rev-parse --verify --quiet $remote_branch)
 
-    echo "Comparing HEAD to $remote_branch ($(git rev-parse --verify --quiet $remote_branch))"
+    if [ $? != "0" ]; then
+      echo "Unable to continue, failed to determine commit for remote branch: $remote_branch"
+      exit 1
+    fi
+
+    # The range is the latest commit on the remote branch and HEAD on this branch
+    COMMIT_RANGE="$remote_branch_commit...HEAD"
+
+    echo "Comparing HEAD to $remote_branch ($remote_branch_commit)"
 fi
 
 # Get the type of this XDMoD repository.
@@ -101,12 +107,6 @@ fi
 new_bin_paths="$new_bin_paths:$qa_dir/vendor/bin:$qa_dir/node_modules/.bin"
 PATH="$new_bin_paths:$PATH"
 export PATH
-
-# Fix for Travis not specifying a range if testing the first commit of
-# a new branch on push
-if [ -z "$COMMIT_RANGE" ]; then
-    COMMIT_RANGE="$(git rev-parse --verify --quiet "${COMMIT}^1")...${COMMIT}"
-fi
 
 # Check whether the start of the commit range is available.
 # If it is not available, try fetching the complete history.
