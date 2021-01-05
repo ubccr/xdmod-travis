@@ -52,11 +52,13 @@ while [ "$1" != "" ]; do
     shift
 done
 
-# Check to see if there is a `COMMIT_RANGE` env variable defined already, if not then we'll attempt to construct one.
-if [ -z "$COMMIT_RANGE" ]; then
+# When running outside of travis we will need to construct our own commit range for comparison
 
-    # If `remote_branch` is not not specified on the command line, then attempt to identify if the repo has an `upstream`
-    # branch that we can use instead.
+if [ -z "$TRAVIS_COMMIT" -a -z "$TRAVIS_COMMIT_RANGE" ]; then
+
+    # If not specified on the command line, figure out the branch that we should be comparing
+    # against
+
     if [ -z "$remote_branch" ]; then
         # Not specified
         upstream=$(git remote|grep upstream)
@@ -83,18 +85,10 @@ if [ -z "$COMMIT_RANGE" ]; then
     # We must update the local metadata for the remote or we may not get the latest commit
     git remote update $upstream &> /dev/null
 
-    # attempt to retrieve the remote_branch commit to be used in the COMMIT_RANGE
-    remote_branch_commit=$(git rev-parse --verify --quiet $remote_branch)
-
-    if [ $? != "0" ]; then
-      echo "Unable to continue, failed to determine commit for remote branch: $remote_branch"
-      exit 1
-    fi
-
     # The range is the latest commit on the remote branch and HEAD on this branch
-    COMMIT_RANGE="$remote_branch_commit...HEAD"
+    TRAVIS_COMMIT_RANGE=$(git rev-parse --verify --quiet $remote_branch)"...HEAD"
 
-    echo "Comparing HEAD to $remote_branch ($remote_branch_commit)"
+    echo "Comparing HEAD to $remote_branch ($(git rev-parse --verify --quiet $remote_branch))"
 fi
 
 # Get the type of this XDMoD repository.
@@ -108,9 +102,15 @@ new_bin_paths="$new_bin_paths:$qa_dir/vendor/bin:$qa_dir/node_modules/.bin"
 PATH="$new_bin_paths:$PATH"
 export PATH
 
+# Fix for Travis not specifying a range if testing the first commit of
+# a new branch on push
+if [ -z "$TRAVIS_COMMIT_RANGE" ]; then
+    TRAVIS_COMMIT_RANGE="$(git rev-parse --verify --quiet "${TRAVIS_COMMIT}^1")...${TRAVIS_COMMIT}"
+fi
+
 # Check whether the start of the commit range is available.
 # If it is not available, try fetching the complete history.
-commit_range_start="$(echo "$COMMIT_RANGE" | sed -E 's/^([a-fA-F0-9]+).*/\1/')"
+commit_range_start="$(echo "$TRAVIS_COMMIT_RANGE" | sed -E 's/^([a-fA-F0-9]+).*/\1/')"
 if ! git show --format='' --no-patch "$commit_range_start" &>/dev/null; then
     git fetch --unshallow
 
@@ -128,7 +128,7 @@ fi
 posix_fails=()
 extra_exit_value=0
 
-# Get the files changed by this commit (excluding deleted files). If there is no COMMIT_RANGE
+# Get the files changed by this commit (excluding deleted files). If there is no TRAVIS_COMMIT_RANGE
 # then it will show currently staged files. This is equivalent to HEAD.
 files_changed=()
 while IFS= read -r -d $'\0' file; do
@@ -143,7 +143,7 @@ while IFS= read -r -d $'\0' file; do
     if [[ ! $file =~ ^tests/artifacts ]]; then
         files_changed+=("$file")
     fi
-done < <(git -c diff.renameLimit=6000 diff --name-only --diff-filter=dar -z "$COMMIT_RANGE")
+done < <(git -c diff.renameLimit=6000 diff --name-only --diff-filter=dar -z "$TRAVIS_COMMIT_RANGE")
 
 # Separate the changed files by language.
 php_files_changed=()
@@ -186,7 +186,7 @@ while IFS= read -r -d $'\0' file; do
     elif [[ "$file" == *.json ]]; then
         json_files_added+=("$file")
     fi
-done < <(git -c diff.renameLimit=6000 diff --name-only --diff-filter=AR -z "$COMMIT_RANGE")
+done < <(git -c diff.renameLimit=6000 diff --name-only --diff-filter=AR -z "$TRAVIS_COMMIT_RANGE")
 
 # Find tracked files that were added (staged) or modified but not staged
 
@@ -246,13 +246,16 @@ for file in "${php_files_changed[@]}" "${php_files_added[@]}"; do
     fi
 done
 
-eslint_args=""
-#if [ -n "$XDMOD_SOURCE_DIR" ]; then
-#  eslint_args="-o ./shipppable/testresults/xdmod-eslint-$(basename "$file").xml -f junit"
-#fi
-
 for file in "${js_files_changed[@]}" "${js_files_added[@]}"; do
-    eslint "$file" "$eslint_args"
+
+    # If we are executing in a Shippable environment then we want to make sure that any output generated is
+    # placed in the correct location.
+    eslint_args=""
+    if [ -n "$SHIPPABLE_BUILD_DIR" ]; then
+      eslint_args="-o $SHIPPABLE_BUILD_DIR/shipppable/testresults/xdmod-eslint-$(basename "$file").xml -f junit"
+    fi
+
+    eslint "$file" $eslint_args
     if [ $? != 0 ]; then
         syntax_exit_value=2
     fi
@@ -332,7 +335,7 @@ for file in "${php_files_changed[@]}" "${js_files_changed[@]}" "${json_files_cha
     fi
 done
 
-if ! git diff --check $COMMIT_RANGE ':(exclude)*.sql';
+if ! git diff --check $TRAVIS_COMMIT_RANGE ':(exclude)*.sql';
 then
     echo "git diff --check failed"
     extra_exit_value=2
