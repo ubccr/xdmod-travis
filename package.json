@@ -4,7 +4,7 @@
     "description": "Scripts and other assets for testing Open XDMoD and Open XDMoD modules.",
     "dependencies": {},
     "devDependencies": {
-        "eslint": "^3.16.1",
+        "eslint": "^4.18.2",
         "eslint-config-airbnb-base": "^11.1.0",
         "eslint-plugin-import": "^2.2.0",
         "jsonlint": "^1.6.2",
