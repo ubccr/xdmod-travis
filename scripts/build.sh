@@ -398,13 +398,15 @@ if [ -e "$php_unit_test_path" ]; then
     fi
 fi
 
-phantom_unit_test_path="html/unit_tests/phantom.js"
-if [ -e "$phantom_unit_test_path" ]; then
-    phantomjs "$phantom_unit_test_path"
-    if [ $? != 0 ]; then
-        unit_exit_value=2
-    fi
-fi
+# PhantomJS is no longer used by Open XDMoD.  These tests need to be updated
+# for headless Chromium.
+#phantom_unit_test_path="html/unit_tests/phantom.js"
+#if [ -e "$phantom_unit_test_path" ]; then
+#    phantomjs "$phantom_unit_test_path"
+#    if [ $? != 0 ]; then
+#        unit_exit_value=2
+#    fi
+#fi
 
 update_script_exit_value $unit_exit_value
 end_travis_fold unit
